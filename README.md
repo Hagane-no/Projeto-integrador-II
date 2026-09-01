@@ -40,7 +40,7 @@ O objetivo deste projeto e fornecer um meio mais prático e mais eficaz para faz
 O plano de ação do projeto está disponível no documento abaixo:
 
 [Plano de ação do projeto]
-(https://drive.google.com/file/d/1kxCqEhUSxNtVIJVouxjnXUYPkQpcNByy/view?usp=drivesdk)
+(https://drive.google.com/file/d/1ZfknhcGqZevSflXkqRGKXdILMvLMS8vR/view?usp=drivesdk)
 
 ## Estrutura do projeto
 
