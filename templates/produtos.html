@@ -27,25 +27,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for produto in produtos %}
+                    {% for p in produtos %}
                         <tr>
-                            <td class="fw-bold">{{ produto.nome }}</td>
-                            <td>{{ produto.categoria.nome|default:produto.categoria }}</td>
-                            <td class="fw-bold">
-                                {% if produto.quantidade != None %}{{ produto.quantidade }}
-                                {% elif produto.quantidade_estoque != None %}{{ produto.quantidade_estoque }}
-                                {% elif produto.estoque != None %}{{ produto.estoque }}
-                                {% else %}0{% endif %}
-                            </td>
-                            <td>R$ 
-                                {% if produto.preco %}{{ produto.preco }}
-                                {% elif produto.preco_unitario %}{{ produto.preco_unitario }}
-                                {% elif produto.valor %}{{ produto.valor }}
-                                {% else %}0,00{% endif %}
-                            </td>
+                            <td class="fw-bold">{{ p.nome }}</td>
+                            <td>{{ p.categoria.nome|default:p.categoria }}</td>
+                            <td class="fw-bold">{{ p.quantidade|default:p.quantidade_estoque|default:p.estoque|default:"0" }}</td>
+                            <td>R$ {{ p.preco|default:p.preco_unitario|default:"0,00" }}</td>
                             <td class="text-end pe-4">
-                                {% if produto.id %}
-                                    <a href="{% url 'deletar_produto' produto.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deseja excluir este produto?');">
+                                {% if p.id %}
+                                    <a href="{% url 'deletar_produto' p.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deseja excluir este produto?');">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 {% endif %}
@@ -58,6 +48,47 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Produto -->
+<div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Cadastrar Novo Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Produto</label>
+                        <input type="text" name="nome" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoria</label>
+                        <select name="categoria" class="form-select">
+                            {% for c in categorias %}
+                                <option value="{{ c.id }}">{{ c.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade Inicial</label>
+                        <input type="number" name="quantidade" class="form-control" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Preço (R$)</label>
+                        <input type="text" name="preco" class="form-control" value="0,00">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Produto</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
