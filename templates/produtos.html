@@ -52,7 +52,7 @@
     </div>
 </div>
 
-<!-- Modal Novo Produto ajustado estritamente aos campos do seu Produto model -->
+<!-- Modal Novo Produto alinhado 100% com ProdutoForm -->
 <div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -65,7 +65,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Nome do Produto</label>
-                        <input type="text" name="nome" class="form-control" required>
+                        <input type="text" name="nome" class="form-control" placeholder="Nome do produto" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Categoria</label>
@@ -77,16 +77,16 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Quantidade Atual</label>
-                        <input type="number" name="quantidade_atual" class="form-control" value="0" required>
+                        <label class="form-label">Quantidade Inicial</label>
+                        <input type="number" name="quantidade_atual" class="form-control" value="0" min="0" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Quantidade Mínima</label>
-                        <input type="number" name="quantidade_minima" class="form-control" value="0" required>
+                        <input type="number" name="quantidade_minima" class="form-control" value="0" min="0" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Unidade de Medida</label>
-                        <input type="text" name="unidade_medida" class="form-control" value="Unidade" required>
+                        <input type="text" name="unidade_medida" class="form-control" value="Unidade" placeholder="Ex: Unidade, Caixa, Pacote" required>
                     </div>
                 </div>
                 <div class="modal-footer">
