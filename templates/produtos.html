@@ -31,8 +31,8 @@
                         <tr>
                             <td class="fw-bold">{{ p.nome }}</td>
                             <td>{{ p.categoria.nome|default:p.categoria }}</td>
-                            <td class="fw-bold">{{ p.quantidade|default:p.quantidade_estoque|default:p.estoque|default:"0" }}</td>
-                            <td>R$ {{ p.preco|default:p.preco_unitario|default:"0,00" }}</td>
+                            <td class="fw-bold">{{ p.quantidade }}</td>
+                            <td>R$ {{ p.preco }}</td>
                             <td class="text-end pe-4">
                                 {% if p.id %}
                                     <a href="{% url 'deletar_produto' p.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deseja excluir este produto?');">
