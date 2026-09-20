@@ -71,7 +71,7 @@ def reposicao_estoque(request):
                 observacao=obs
             )
             messages.success(request, f'Movimentação de {tipo} registrada com sucesso!')
-            return redirect('reposicao_estoque')
+            return redirect('reposicao')
 
     context = {
         'produtos': produtos,
