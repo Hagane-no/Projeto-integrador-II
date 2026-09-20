@@ -4,39 +4,104 @@
 {% block title %}Dashboard - Confiro Já{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h2 class="fw-bold"><i class="bi bi-speedometer2 me-2"></i>Painel Principal</h2>
-        <p class="text-muted">Visão geral do sistema e estoque.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold"><i class="bi bi-speedometer2 me-2"></i>Visão Geral do Stock</h2>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Card: Total de Produtos -->
+    <div class="col-md-4">
+        <div class="card bg-primary text-white shadow-sm border-0 h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Total de Produtos</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ total_produtos|default:"0" }}</h2>
+                </div>
+                <i class="bi bi-box-seam" style="font-size: 3rem; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Reposição Necessária -->
+    <div class="col-md-4">
+        <div class="card bg-danger text-white shadow-sm border-0 h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Reposição Necessária</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ reposicao_necessaria|default:"0" }}</h2>
+                </div>
+                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Stock em Dia -->
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow-sm border-0 h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase fw-bold mb-1">Stock em Dia</h6>
+                    <h2 class="display-6 fw-bold mb-0">{{ stock_em_dia|default:"0" }}</h2>
+                </div>
+                <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.5;"></i>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="row g-4">
-    <!-- Cards de Resumo -->
-    <div class="col-md-4">
-        <div class="card bg-primary text-white shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Produtos</h5>
-                <p class="card-text fs-3 fw-bold">{{ total_produtos|default:"0" }}</p>
-                <a href="{% url 'gerenciar_produtos' %}" class="btn btn-light btn-sm text-primary">Gerenciar</a>
+    <!-- Produtos Críticos (Abaixo do Mínimo) -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-danger"><i class="bi bi-exclamation-circle me-2"></i>Produtos Críticos (Abaixo do Mínimo)</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produto</th>
+                                <th>Atual</th>
+                                <th>Mínimo</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos_criticos %}
+                                <tr>
+                                    <td class="fw-bold">{{ produto.nome }}</td>
+                                    <td><span class="badge bg-danger">{{ produto.quantidade }} Unidade(s)</span></td>
+                                    <td>{{ produto.quantidade_minima|default:"20" }}</td>
+                                    <td>
+                                        <a href="{% url 'reposicao' %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-arrow-up-circle me-1"></i>Repor
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">Nenhum produto em estado crítico.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-tags me-2"></i>Categorias</h5>
-                <p class="card-text fs-3 fw-bold">{{ total_categorias|default:"0" }}</p>
-                <a href="{% url 'gerenciar_categorias' %}" class="btn btn-light btn-sm text-success">Gerenciar</a>
+
+    <!-- Espaço para o Gráfico (se houver) -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-primary"><i class="bi bi-pie-chart me-2"></i>Status do Stock (Análise de Dados)</h6>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-info text-white shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-arrow-left-right me-2"></i>Movimentações</h5>
-                <p class="card-text fs-3 fw-bold">{{ total_movimentacoes|default:"0" }}</p>
-                <a href="{% url 'historico' %}" class="btn btn-light btn-sm text-info">Ver Histórico</a>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <!-- Se tiver um gráfico configurado via Chart.js, ele deve entrar aqui -->
+                <canvas id="meuGrafico"></canvas>
             </div>
         </div>
     </div>
