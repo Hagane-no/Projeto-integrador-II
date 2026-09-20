@@ -18,7 +18,7 @@
                     <tr>
                         <th>Data / Hora</th>
                         <th>Produto</th>
-                        <th>Tipo</th>
+                        <th>Tipo / Ação</th>
                         <th>Quantidade</th>
                         <th>Usuário / Resp.</th>
                     </tr>
@@ -26,25 +26,41 @@
                 <tbody>
                     {% for item in historico %}
                         <tr>
-                            <td>{{ item.data|date:"d/m/Y H:i"|default:item.data }}</td>
-                            <td class="fw-bold">{{ item.produto }}</td>
+                            <td>{{ item.data_hora|default:item.data|default:item.created_at }}</td>
+                            <td class="fw-bold">{{ item.produto.nome|default:item.produto }}</td>
                             <td>
-                                {% if item.tipo == 'Entrada' or item.tipo == 'reposicao' %}
+                                {% if item.tipo == 'Entrada' or item.tipo == 'reposicao' or item.tipo == 'E' %}
                                     <span class="badge bg-success"><i class="bi bi-arrow-down-left me-1"></i>Entrada</span>
                                 {% else %}
-                                    <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Saída</span>
+                                    <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Retirada</span>
                                 {% endif %}
                             </td>
-                            <td class="fw-bold">{{ item.quantidade }}</td>
-                            <td>{{ item.usuario|default:"Sistema" }}</td>
+                            <td class="fw-bold">{{ item.quantidade|default:item.qtd }}</td>
+                            <td>{{ item.usuario|default:item.user|default:"Sistema" }}</td>
                         </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                Nenhuma movimentação registrada até o momento.
-                            </td>
-                        </tr>
+                        {% for item in movimentacoes %}
+                            <tr>
+                                <td>{{ item.data_hora|default:item.data|default:item.created_at }}</td>
+                                <td class="fw-bold">{{ item.produto.nome|default:item.produto }}</td>
+                                <td>
+                                    {% if item.tipo == 'Entrada' or item.tipo == 'reposicao' or item.tipo == 'E' %}
+                                        <span class="badge bg-success"><i class="bi bi-arrow-down-left me-1"></i>Entrada</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Retirada</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">{{ item.quantidade|default:item.qtd }}</td>
+                                <td>{{ item.usuario|default:item.user|default:"Sistema" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Nenhuma movimentação registrada até o momento.
+                                </td>
+                            </tr>
+                        {% endfor %}
                     {% endfor %}
                 </tbody>
             </table>
