@@ -30,9 +30,9 @@
                     {% for p in produtos %}
                         <tr>
                             <td class="fw-bold">{{ p.nome }}</td>
-                            <td>{{ p.categoria.nome|default:p.categoria }}</td>
-                            <td class="fw-bold">{{ p.quantidade }}</td>
-                            <td>R$ {{ p.preco }}</td>
+                            <td>{{ p.categoria.nome|default:p.categoria|default:"-" }}</td>
+                            <td class="fw-bold">{{ p.quantidade_atual|default:p.quantidade|default:"0" }}</td>
+                            <td>R$ {{ p.preco_unitario|default:p.preco|default:"0,00" }}</td>
                             <td class="text-end pe-4">
                                 {% if p.id %}
                                     <a href="{% url 'deletar_produto' p.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deseja excluir este produto?');">
@@ -69,7 +69,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Categoria</label>
-                        <select name="categoria" class="form-select">
+                        <select name="categoria" class="form-select" required>
+                            <option value="">Selecione uma categoria...</option>
                             {% for c in categorias %}
                                 <option value="{{ c.id }}">{{ c.nome }}</option>
                             {% endfor %}
@@ -77,11 +78,11 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Quantidade Inicial</label>
-                        <input type="number" name="quantidade" class="form-control" value="0" required>
+                        <input type="number" name="quantidade_atual" class="form-control" value="0" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Preço (R$)</label>
-                        <input type="text" name="preco" class="form-control" value="0,00">
+                        <input type="text" name="preco_unitario" class="form-control" value="0.00">
                     </div>
                 </div>
                 <div class="modal-footer">
