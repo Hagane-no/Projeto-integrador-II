@@ -87,7 +87,56 @@
     }
   });
 </script>
+<!-- Botão Flutuante de Acessibilidade (Leitor de Voz) -->
+<button id="btn-acessibilidade" onclick="alternarLeitorVoz()" title="Ativar/Desativar Leitor de Voz" style="position: fixed; right: 15px; bottom: 85px; z-index: 9999; background-color: #0d6efd; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+  🔊
+</button>
 
+<script>
+  let leitorAtivo = false;
+
+  function alternarLeitorVoz() {
+    leitorAtivo = !leitorAtivo;
+    const btn = document.getElementById('btn-acessibilidade');
+
+    if (leitorAtivo) {
+      btn.style.backgroundColor = '#198754'; // Verde quando ativo
+      btn.innerHTML = '🔊';
+      
+      // Feedback sonoro e visual de ativação
+      window.speechSynthesis.cancel();
+      let fala = new SpeechSynthesisUtterance("Leitor de voz ativado. Clique em qualquer texto para ouvir.");
+      fala.lang = 'pt-BR';
+      window.speechSynthesis.speak(fala);
+    } else {
+      btn.style.backgroundColor = '#0d6efd'; // Azul quando inativo
+      btn.innerHTML = '🔇';
+      
+      window.speechSynthesis.cancel();
+      let fala = new SpeechSynthesisUtterance("Leitor de voz desativado.");
+      fala.lang = 'pt-BR';
+      window.speechSynthesis.speak(fala);
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    // Só lê o texto se o botão estiver ATIVADO
+    if (!leitorAtivo) return;
+
+    // Ignora o clique no próprio botão de acessibilidade
+    if (e.target.closest('#btn-acessibilidade')) return;
+
+    let elemento = e.target.closest('h1, h2, h3, h4, h5, h6, p, span, a, button, td, th, label, div, .card, .btn');
+
+    if (elemento && elemento.innerText.trim() !== '') {
+      window.speechSynthesis.cancel();
+      let texto = elemento.innerText.trim();
+      let fala = new SpeechSynthesisUtterance(texto);
+      fala.lang = 'pt-BR';
+      window.speechSynthesis.speak(fala);
+    }
+  });
+</script>
 </body>
 
 </html>
