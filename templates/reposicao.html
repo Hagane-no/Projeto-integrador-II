@@ -22,10 +22,6 @@
                         <option value="">Selecione um produto...</option>
                         {% for prod in produtos %}
                             <option value="{{ prod.id }}">{{ prod.nome }}</option>
-                        {% empty %}
-                            {% for prod in estoque %}
-                                <option value="{{ prod.id }}">{{ prod.nome }}</option>
-                            {% endfor %}
                         {% endfor %}
                     </select>
                 </div>
@@ -61,21 +57,13 @@
                     {% for prod in produtos %}
                         <tr>
                             <td class="fw-bold">{{ prod.nome }}</td>
-                            <td>{{ prod.categoria.nome|default:prod.categoria|default:"-" }}</td>
-                            <td><span class="badge bg-success">{{ prod.quantidade|default:prod.qtd|default:prod.estoque|default:"0" }}</span></td>
+                            <td>{{ prod.categoria.nome|default:prod.categoria }}</td>
+                            <td><span class="badge bg-success">{{ prod.quantidade }}</span></td>
                         </tr>
                     {% empty %}
-                        {% for prod in estoque %}
-                            <tr>
-                                <td class="fw-bold">{{ prod.nome }}</td>
-                                <td>{{ prod.categoria.nome|default:prod.categoria|default:"-" }}</td>
-                                <td><span class="badge bg-success">{{ prod.quantidade|default:prod.qtd|default:prod.estoque|default:"0" }}</span></td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center py-4 text-muted">Nenhum produto cadastrado para reposição.</td>
-                            </tr>
-                        {% endfor %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-muted">Nenhum produto cadastrado para reposição.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
