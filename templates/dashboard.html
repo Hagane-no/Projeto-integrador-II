@@ -1,7 +1,7 @@
 
 {% extends 'base.html' %}
 
-{% block title %}Painel Principal - Confiro Já{% endblock %}
+{% block title %}Dashboard - Confiro Já{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -9,12 +9,9 @@
         <h2 class="fw-bold"><i class="bi bi-speedometer2 me-2"></i>Visão Geral do Stock</h2>
         <p class="text-muted mb-0">Controle e estatísticas em tempo real.</p>
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalMovimentacao">
-        <i class="bi bi-arrow-left-right me-1"></i> Registrar Entrada / Saída
-    </button>
 </div>
 
-<!-- Cards de Estatísticas -->
+<!-- Cards Informativos -->
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="card bg-primary text-white border-0 shadow-sm">
@@ -51,87 +48,86 @@
     </div>
 </div>
 
-<!-- Tabela de Produtos Críticos -->
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white py-3">
-        <h5 class="mb-0 fs-6 fw-bold text-danger"><i class="bi bi-exclamation-circle me-2"></i>Produtos Críticos (Abaixo do Mínimo)</h5>
+<div class="row g-4">
+    <!-- Tabela Produtos Críticos -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fs-6 fw-bold text-danger"><i class="bi bi-exclamation-circle me-2"></i>Produtos Críticos (Abaixo do Mínimo)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produto</th>
+                                <th>Atual</th>
+                                <th>Mínimo</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in produtos_criticos %}
+                                <tr>
+                                    <td class="fw-bold">{{ p.nome }}</td>
+                                    <td><span class="badge bg-danger">{{ p.quantidade_atual }} {{ p.unidade_medida }}</span></td>
+                                    <td>{{ p.quantidade_minima }}</td>
+                                    <td>
+                                        <a href="{% url 'reposicao_estoque' %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-arrow-up-circle me-1"></i> Repor
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">Nenhum produto em estado crítico.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Produto</th>
-                        <th>Atual</th>
-                        <th>Mínimo</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in produtos_criticos %}
-                        <tr>
-                            <td class="fw-bold">{{ p.nome }}</td>
-                            <td><span class="badge bg-danger">{{ p.quantidade_atual }} {{ p.unidade_medida }}</span></td>
-                            <td>{{ p.quantidade_minima }}</td>
-                            <td>
-                                <a href="{% url 'reposicao' %}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-arrow-up-circle me-1"></i> Repor
-                                </a>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">Nenhum produto em estado crítico.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+    <!-- Gráfico Status do Stock -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fs-6 fw-bold text-primary"><i class="bi bi-pie-chart me-2"></i>Status do Stock (Análise de Dados)</h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div style="width: 260px; height: 260px;">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Registrar Entrada / Saída (Idêntico ao original) -->
-<div class="modal fade" id="modalMovimentacao" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold"><i class="bi bi-arrow-left-right me-2"></i>Registrar Entrada / Saída</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Produto</label>
-                        <select name="produto" class="form-select" required>
-                            <option value="">- Select an option -</option>
-                            {% for p in produtos %}
-                                <option value="{{ p.id }}">{{ p.nome }} ({{ p.quantidade_atual }} {{ p.unidade_medida }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Tipo de Movimentação</label>
-                        <select name="tipo" class="form-select" required>
-                            <option value="ENTRADA">Entrada (+)</option>
-                            <option value="SAIDA">Saída (-)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Quantidade</label>
-                        <input type="number" name="quantidade" class="form-control" min="1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Observação</label>
-                        <textarea name="observacao" class="form-control" rows="3" placeholder="Ex: Entrega de fornecedor / Retirada para sala 3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Salvar Movimentação</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Stock OK', 'Reposição Necessária'],
+                datasets: [{
+                    data: [{{ stock_em_dia }}, {{ reposicao_necessaria }}],
+                    backgroundColor: ['#198754', '#dc3545'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}
