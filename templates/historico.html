@@ -24,43 +24,27 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in movimentacoes %}
+                    {% for m in movimentacoes %}
                         <tr>
-                            <td>{{ item.data }}</td>
-                            <td class="fw-bold">{{ item.produto }}</td>
+                            <td>{{ m.data|date:"d/m/Y H:i" }}</td>
+                            <td class="fw-bold">{{ m.produto.nome }}</td>
                             <td>
-                                {% if item.tipo == 'Entrada' or item.tipo == 'reposicao' or item.tipo == 'E' %}
+                                {% if m.tipo == 'ENTRADA' %}
                                     <span class="badge bg-success"><i class="bi bi-arrow-down-left me-1"></i>Entrada</span>
                                 {% else %}
-                                    <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Retirada</span>
+                                    <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Saída</span>
                                 {% endif %}
                             </td>
-                            <td class="fw-bold">{{ item.quantidade }}</td>
-                            <td>{{ item.usuario|default:"Sistema" }}</td>
+                            <td class="fw-bold">{{ m.quantidade }}</td>
+                            <td>{{ m.usuario.username|default:"Sistema" }}</td>
                         </tr>
                     {% empty %}
-                        {% for item in historico %}
-                            <tr>
-                                <td>{{ item.data }}</td>
-                                <td class="fw-bold">{{ item.produto }}</td>
-                                <td>
-                                    {% if item.tipo == 'Entrada' or item.tipo == 'reposicao' or item.tipo == 'E' %}
-                                        <span class="badge bg-success"><i class="bi bi-arrow-down-left me-1"></i>Entrada</span>
-                                    {% else %}
-                                        <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Retirada</span>
-                                    {% endif %}
-                                </td>
-                                <td class="fw-bold">{{ item.quantidade }}</td>
-                                <td>{{ item.usuario|default:"Sistema" }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
-                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                    Nenhuma movimentação registrada até o momento.
-                                </td>
-                            </tr>
-                        {% endfor %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                Nenhuma movimentação registrada até o momento.
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
