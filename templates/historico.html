@@ -24,10 +24,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in historico %}
+                    {% for item in movimentacoes %}
                         <tr>
-                            <td>{{ item.data_hora|default:item.data|default:item.created_at }}</td>
-                            <td class="fw-bold">{{ item.produto.nome|default:item.produto }}</td>
+                            <td>{{ item.data }}</td>
+                            <td class="fw-bold">{{ item.produto }}</td>
                             <td>
                                 {% if item.tipo == 'Entrada' or item.tipo == 'reposicao' or item.tipo == 'E' %}
                                     <span class="badge bg-success"><i class="bi bi-arrow-down-left me-1"></i>Entrada</span>
@@ -35,14 +35,14 @@
                                     <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Retirada</span>
                                 {% endif %}
                             </td>
-                            <td class="fw-bold">{{ item.quantidade|default:item.qtd }}</td>
-                            <td>{{ item.usuario|default:item.user|default:"Sistema" }}</td>
+                            <td class="fw-bold">{{ item.quantidade }}</td>
+                            <td>{{ item.usuario|default:"Sistema" }}</td>
                         </tr>
                     {% empty %}
-                        {% for item in movimentacoes %}
+                        {% for item in historico %}
                             <tr>
-                                <td>{{ item.data_hora|default:item.data|default:item.created_at }}</td>
-                                <td class="fw-bold">{{ item.produto.nome|default:item.produto }}</td>
+                                <td>{{ item.data }}</td>
+                                <td class="fw-bold">{{ item.produto }}</td>
                                 <td>
                                     {% if item.tipo == 'Entrada' or item.tipo == 'reposicao' or item.tipo == 'E' %}
                                         <span class="badge bg-success"><i class="bi bi-arrow-down-left me-1"></i>Entrada</span>
@@ -50,8 +50,8 @@
                                         <span class="badge bg-danger"><i class="bi bi-arrow-up-right me-1"></i>Retirada</span>
                                     {% endif %}
                                 </td>
-                                <td class="fw-bold">{{ item.quantidade|default:item.qtd }}</td>
-                                <td>{{ item.usuario|default:item.user|default:"Sistema" }}</td>
+                                <td class="fw-bold">{{ item.quantidade }}</td>
+                                <td>{{ item.usuario|default:"Sistema" }}</td>
                             </tr>
                         {% empty %}
                             <tr>
