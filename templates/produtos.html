@@ -21,8 +21,8 @@
                     <tr>
                         <th>Nome</th>
                         <th>Categoria</th>
-                        <th>Quantidade</th>
-                        <th>Preço</th>
+                        <th>Quantidade Atual</th>
+                        <th>Mínimo</th>
                         <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
@@ -30,9 +30,9 @@
                     {% for p in produtos %}
                         <tr>
                             <td class="fw-bold">{{ p.nome }}</td>
-                            <td>{{ p.categoria.nome|default:p.categoria|default:"-" }}</td>
-                            <td class="fw-bold">{{ p.quantidade_atual|default:p.quantidade|default:"0" }}</td>
-                            <td>R$ {{ p.preco_unitario|default:p.preco|default:"0,00" }}</td>
+                            <td>{{ p.categoria.nome }}</td>
+                            <td class="fw-bold">{{ p.quantidade_atual }} {{ p.unidade_medida }}</td>
+                            <td>{{ p.quantidade_minima }}</td>
                             <td class="text-end pe-4">
                                 {% if p.id %}
                                     <a href="{% url 'deletar_produto' p.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deseja excluir este produto?');">
@@ -52,7 +52,7 @@
     </div>
 </div>
 
-<!-- Modal Novo Produto -->
+<!-- Modal Novo Produto ajustado estritamente aos campos do seu Produto model -->
 <div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -77,12 +77,16 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Quantidade Inicial</label>
+                        <label class="form-label">Quantidade Atual</label>
                         <input type="number" name="quantidade_atual" class="form-control" value="0" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Preço (R$)</label>
-                        <input type="text" name="preco_unitario" class="form-control" value="0.00">
+                        <label class="form-label">Quantidade Mínima</label>
+                        <input type="number" name="quantidade_minima" class="form-control" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unidade de Medida</label>
+                        <input type="text" name="unidade_medida" class="form-control" value="Unidade" required>
                     </div>
                 </div>
                 <div class="modal-footer">
