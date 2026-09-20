@@ -8,7 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Chart.js CDN (Análise de Dados / Gráficos) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-light">
@@ -19,12 +18,14 @@
             <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
                 <i class="bi bi-box-seam me-2"></i>Confiro Já
             </a>
+            
             <!-- Botão Hambúrguer para telemóveis -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
                     </li>
@@ -41,7 +42,8 @@
                         <a class="nav-link text-white" href="{% url 'historico' %}"><i class="bi bi-clock-history me-1"></i> Histórico</a>
                     </li>
                 </ul>
-                <ul class="navbar-nav align-items-center">
+                
+                <ul class="class=navbar-nav align-items-center">
                     {% if user.is_authenticated %}
                         <li class="nav-item me-2">
                             <span class="nav-link text-white small opacity-75"><i class="bi bi-person-circle me-1"></i> {{ user.username }}</span>
@@ -75,86 +77,52 @@
     {% block scripts %}
     {% endblock %}
 
+    <!-- Botão Flutuante de Acessibilidade (Leitor de Voz) -->
+    <button id="btn-acessibilidade" onclick="alternarLeitorVoz()" title="Ativar/Desativar Leitor de Voz" style="position: fixed; right: 15px; bottom: 85px; z-index: 9999; background-color: #0d6efd; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+      🔊
+    </button>
 
-<script>
-  // Lê em voz alta o texto do elemento ao clicar
-  document.addEventListener('click', function(e) {
-    if (e.target.innerText && e.target.childElementCount === 0) {
-      window.speechSynthesis.cancel(); // Para leituras anteriores
-      let fala = new SpeechSynthesisUtterance(e.target.innerText);
-      fala.lang = 'pt-BR';
-      window.speechSynthesis.speak(fala);
-    }
-  });
-</script>
-<!-- Botão Flutuante de Acessibilidade (Leitor de Voz) -->
-<button id="btn-acessibilidade" onclick="alternarLeitorVoz()" title="Ativar/Desativar Leitor de Voz" style="position: fixed; right: 15px; bottom: 85px; z-index: 9999; background-color: #0d6efd; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 22px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
-  🔊
-</button>
+    <script>
+      function alternarLeitorVoz() {
+        const btn = document.getElementById('btn-acessibilidade');
+        let ativoAtual = btn.getAttribute('data-ativo') === 'true';
+        let novoEstado = !ativoAtual;
+        
+        btn.setAttribute('data-ativo', novoEstado);
+        window.speechSynthesis.cancel();
 
-<script>
-  function alternarLeitorVoz() {
-    const btn = document.getElementById('btn-acessibilidade');
-    let ativoAtual = btn.getAttribute('data-ativo') === 'true';
-    
-    let novoEstado = !ativoAtual;
-    btn.setAttribute('data-ativo', novoEstado);
+        if (novoEstado) {
+          btn.style.backgroundColor = '#198754';
+          btn.innerHTML = '🔊';
+          let fala = new SpeechSynthesisUtterance("Leitor de voz ativado.");
+          fala.lang = 'pt-BR';
+          window.speechSynthesis.speak(fala);
+        } else {
+          btn.style.backgroundColor = '#0d6efd';
+          btn.innerHTML = '🔇';
+          let fala = new SpeechSynthesisUtterance("Leitor de voz desativado.");
+          fala.lang = 'pt-BR';
+          window.speechSynthesis.speak(fala);
+        }
+      }
 
-    window.speechSynthesis.cancel();
+      document.addEventListener('click', function(e) {
+        const btn = document.getElementById('btn-acessibilidade');
+        let ativoAtual = btn.getAttribute('data-ativo') === 'true';
 
-    if (novoEstado) {
-      btn.style.backgroundColor = '#198754';
-      btn.innerHTML = '🔊';
-      let fala = new SpeechSynthesisUtterance("Leitor de voz ativado.");
-      fala.lang = 'pt-BR';
-      window.speechSynthesis.speak(fala);
-    } else {
-      btn.style.backgroundColor = '#0d6efd';
-      btn.innerHTML = '🔇';
-      let fala = new SpeechSynthesisUtterance("Leitor de voz desativado.");
-      fala.lang = 'pt-BR';
-      window.speechSynthesis.speak(fala);
-    }
-  }
+        if (!ativoAtual) return;
+        if (e.target.closest('#btn-acessibilidade')) return;
 
-  document.addEventListener('click', function(e) {
-    const btn = document.getElementById('btn-acessibilidade');
-    let ativoAtual = btn.getAttribute('data-ativo') === 'true';
+        let elemento = e.target.closest('h1, h2, h3, h4, h5, h6, p, span, a, button, td, th, label, div, .card');
 
-    if (!ativoAtual) return;
-
-    if (e.target.closest('#btn-acessibilidade')) return;
-
-    let elemento = e.target.closest('h1, h2, h3, h4, h5, h6, p, span, a, button, td, th, label, div, .card');
-
-    if (elemento && elemento.innerText.trim() !== '') {
-      window.speechSynthesis.cancel();
-      let texto = elemento.innerText.trim();
-      let fala = new SpeechSynthesisUtterance(texto);
-      fala.lang = 'pt-BR';
-      window.speechSynthesis.speak(fala);
-    }
-  });
-</script>
-
-  document.addEventListener('click', function(e) {
-    // Só lê o texto se o botão estiver ATIVADO
-    if (!leitorAtivo) return;
-
-    // Ignora o clique no próprio botão de acessibilidade
-    if (e.target.closest('#btn-acessibilidade')) return;
-
-    let elemento = e.target.closest('h1, h2, h3, h4, h5, h6, p, span, a, button, td, th, label, div, .card, .btn');
-
-    if (elemento && elemento.innerText.trim() !== '') {
-      window.speechSynthesis.cancel();
-      let texto = elemento.innerText.trim();
-      let fala = new SpeechSynthesisUtterance(texto);
-      fala.lang = 'pt-BR';
-      window.speechSynthesis.speak(fala);
-    }
-  });
-</script>
+        if (elemento && elemento.innerText.trim() !== '') {
+          window.speechSynthesis.cancel();
+          let texto = elemento.innerText.trim();
+          let fala = new SpeechSynthesisUtterance(texto);
+          fala.lang = 'pt-BR';
+          window.speechSynthesis.speak(fala);
+        }
+      });
+    </script>
 </body>
-
 </html>
