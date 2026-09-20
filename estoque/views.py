@@ -38,7 +38,7 @@ def dashboard(request):
             movimentacao = form.save(commit=False)
             movimentacao.usuario = request.user
             movimentacao.save()
-            messages.success(request, 'Movimentação registrada com sucesso!')
+            messages.success(request, f'Movimentação de {movimentacao.get_tipo_display()} registrada com sucesso!')
             return redirect('dashboard')
         else:
             messages.error(request, 'Erro ao registrar movimentação. Verifique os dados inseridos.')
@@ -81,7 +81,7 @@ def reposicao_estoque(request):
                 usuario=request.user
             )
             messages.success(request, 'Reposição efetuada com sucesso!')
-            return redirect('reposicao_estoque')
+            return redirect('reposicao')  # Redirecionamento correto conforme urls.py
 
     context = {
         'produtos': produtos,
