@@ -20,15 +20,11 @@
                     <label class="form-label">Produto</label>
                     <select name="produto" class="form-select" required>
                         <option value="">Selecione um produto...</option>
-                        {% for item in produtos %}
-                            <option value="{{ item.id }}">{{ item.nome }}</option>
+                        {% for p in produtos %}
+                            <option value="{{ p.id }}">{{ p.nome }}</option>
                         {% empty %}
-                            {% for item in estoque %}
-                                <option value="{{ item.id }}">{{ item.nome }}</option>
-                            {% empty %}
-                                {% for item in itens %}
-                                    <option value="{{ item.id }}">{{ item.nome }}</option>
-                                {% endfor %}
+                            {% for p in estoque %}
+                                <option value="{{ p.id }}">{{ p.nome }}</option>
                             {% endfor %}
                         {% endfor %}
                     </select>
@@ -62,32 +58,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in produtos %}
+                    {% for p in produtos %}
                         <tr>
-                            <td class="fw-bold">{{ item.nome }}</td>
-                            <td>{{ item.categoria.nome|default:item.categoria }}</td>
-                            <td>
-                                <span class="badge bg-success">
-                                    {% if item.quantidade != None %}{{ item.quantidade }}
-                                    {% elif item.quantidade_estoque != None %}{{ item.quantidade_estoque }}
-                                    {% elif item.estoque != None %}{{ item.estoque }}
-                                    {% else %}0{% endif %}
-                                </span>
-                            </td>
+                            <td class="fw-bold">{{ p.nome }}</td>
+                            <td>{{ p.categoria.nome|default:p.categoria }}</td>
+                            <td><span class="badge bg-success">{{ p.quantidade|default:p.quantidade_estoque|default:p.estoque|default:"0" }}</span></td>
                         </tr>
                     {% empty %}
-                        {% for item in estoque %}
+                        {% for p in estoque %}
                             <tr>
-                                <td class="fw-bold">{{ item.nome }}</td>
-                                <td>{{ item.categoria.nome|default:item.categoria }}</td>
-                                <td>
-                                    <span class="badge bg-success">
-                                        {% if item.quantidade != None %}{{ item.quantidade }}
-                                        {% elif item.quantidade_estoque != None %}{{ item.quantidade_estoque }}
-                                        {% elif item.estoque != None %}{{ item.estoque }}
-                                        {% else %}0{% endif %}
-                                    </span>
-                                </td>
+                                <td class="fw-bold">{{ p.nome }}</td>
+                                <td>{{ p.categoria.nome|default:p.categoria }}</td>
+                                <td><span class="badge bg-success">{{ p.quantidade|default:p.quantidade_estoque|default:p.estoque|default:"0" }}</span></td>
                             </tr>
                         {% empty %}
                             <tr>
