@@ -38,7 +38,7 @@ def dashboard(request):
             movimentacao = form.save(commit=False)
             movimentacao.usuario = request.user
             movimentacao.save()
-            messages.success(request, f'Movimentação registrada com sucesso!')
+            messages.success(request, 'Movimentação registrada com sucesso!')
             return redirect('dashboard')
         else:
             messages.error(request, 'Erro ao registrar movimentação. Verifique os dados inseridos.')
@@ -49,8 +49,7 @@ def dashboard(request):
     total_produtos = produtos.count()
     total_categorias = Categoria.objects.count()
     
-    # Filtra produtos críticos (quantidade atual menor ou igual à mínima)
-    produtos_criticos = [p for p in produtos if getattr(p, 'precisa_reposicao', p.quantidade_atual <= getattr(p, 'quantidade_minima', 20))]
+    produtos_criticos = [p for p in produtos if p.precisa_reposicao]
     reposicao_necessaria = len(produtos_criticos)
     stock_em_dia = total_produtos - reposicao_necessaria
 
@@ -75,16 +74,14 @@ def reposicao_estoque(request):
         qtd = request.POST.get('quantidade')
         if produto_id and qtd:
             prod = get_object_or_404(Produto, id=produto_id)
-            prod.quantidade_atual += int(qtd)
-            prod.save()
             Movimentacao.objects.create(
                 produto=prod,
-                tipo='Entrada',
+                tipo='ENTRADA',
                 quantidade=int(qtd),
                 usuario=request.user
             )
             messages.success(request, 'Reposição efetuada com sucesso!')
-            return redirect('reposicao')
+            return redirect('reposicao_estoque')
 
     context = {
         'produtos': produtos,
@@ -94,7 +91,7 @@ def reposicao_estoque(request):
 
 @login_required(login_url='login')
 def historico(request):
-    movimentacoes = Movimentacao.objects.all().select_related('produto').order_by('-data')
+    movimentacoes = Movimentacao.objects.all().select_related('produto', 'usuario').order_by('-data')
     context = {
         'movimentacoes': movimentacoes,
     }
@@ -117,7 +114,7 @@ def gerenciar_produtos(request):
         form = ProdutoForm()
 
     produtos = Produto.objects.all().select_related('categoria')
-    categorias = Categoria.objects.all()  # <--- ENVIA AS CATEGORIAS PARA O MODAL
+    categorias = Categoria.objects.all()
     
     context = {
         'produtos': produtos,
@@ -197,8 +194,8 @@ def api_produtos(request):
             'categoria': prod.categoria.nome if prod.categoria else 'Sem Categoria',
             'quantidade_atual': prod.quantidade_atual,
             'quantidade_minima': prod.quantidade_minima,
-            'unidade_medida': getattr(prod, 'unidade_medida', 'Unidade'),
-            'precisa_reposicao': prod.quantidade_atual < getattr(prod, 'quantidade_minima', 20)
+            'unidade_medida': prod.unidade_medida,
+            'precisa_reposicao': prod.precisa_reposicao
         })
         
     return JsonResponse({'status': 'sucesso', 'total': len(data), 'produtos': data}, json_dumps_params={'ensure_ascii': False})
