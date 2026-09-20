@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from .models import Produto, Categoria, Movimentacao
 from .forms import MovimentacaoForm, ProdutoForm, CategoriaForm
 
@@ -37,7 +38,7 @@ def dashboard(request):
             movimentacao = form.save(commit=False)
             movimentacao.usuario = request.user
             movimentacao.save()
-            messages.success(request, f'Movimentação de {movimentacao.get_tipo_display()} registrada com sucesso!')
+            messages.success(request, f'Movimentação registrada com sucesso!')
             return redirect('dashboard')
         else:
             messages.error(request, 'Erro ao registrar movimentação. Verifique os dados inseridos.')
@@ -47,17 +48,19 @@ def dashboard(request):
     produtos = Produto.objects.all().select_related('categoria')
     total_produtos = produtos.count()
     total_categorias = Categoria.objects.count()
-    produtos_alerta = [p for p in produtos if p.precisa_reposicao]
-    qtd_alerta = len(produtos_alerta)
-    qtd_ok = total_produtos - qtd_alerta
+    
+    # Filtra produtos críticos (quantidade atual menor ou igual à mínima)
+    produtos_criticos = [p for p in produtos if getattr(p, 'precisa_reposicao', p.quantidade_atual <= getattr(p, 'quantidade_minima', 20))]
+    reposicao_necessaria = len(produtos_criticos)
+    stock_em_dia = total_produtos - reposicao_necessaria
 
     context = {
         'produtos': produtos,
+        'produtos_criticos': produtos_criticos,
         'total_produtos': total_produtos,
         'total_categorias': total_categorias,
-        'produtos_alerta': produtos_alerta,
-        'qtd_alerta': qtd_alerta,
-        'qtd_ok': qtd_ok,
+        'reposicao_necessaria': reposicao_necessaria,
+        'stock_em_dia': stock_em_dia,
         'form': form,
     }
     return render(request, 'dashboard.html', context)
@@ -65,12 +68,26 @@ def dashboard(request):
 
 @login_required(login_url='login')
 def reposicao_estoque(request):
-    todos_produtos = Produto.objects.all().select_related('categoria')
-    produtos_criticos = [p for p in todos_produtos if p.precisa_reposicao]
+    produtos = Produto.objects.all().select_related('categoria')
+    
+    if request.method == 'POST':
+        produto_id = request.POST.get('produto')
+        qtd = request.POST.get('quantidade')
+        if produto_id and qtd:
+            prod = get_object_or_404(Produto, id=produto_id)
+            prod.quantidade_atual += int(qtd)
+            prod.save()
+            Movimentacao.objects.create(
+                produto=prod,
+                tipo='Entrada',
+                quantidade=int(qtd),
+                usuario=request.user
+            )
+            messages.success(request, 'Reposição efetuada com sucesso!')
+            return redirect('reposicao')
 
     context = {
-        'produtos_criticos': produtos_criticos,
-        'total_criticos': len(produtos_criticos),
+        'produtos': produtos,
     }
     return render(request, 'reposicao.html', context)
 
@@ -100,8 +117,11 @@ def gerenciar_produtos(request):
         form = ProdutoForm()
 
     produtos = Produto.objects.all().select_related('categoria')
+    categorias = Categoria.objects.all()  # <--- ENVIA AS CATEGORIAS PARA O MODAL
+    
     context = {
         'produtos': produtos,
+        'categorias': categorias,
         'form': form,
     }
     return render(request, 'produtos.html', context)
@@ -165,15 +185,8 @@ def deletar_categoria(request, pk):
     return render(request, 'confirmar_delecao.html', {'objeto': categoria, 'tipo': 'Categoria'})
 
 
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from .models import Produto
-
 @login_required
 def api_produtos(request):
-    """
-    API JSON que retorna a lista de produtos, quantidades e status de estoque.
-    """
     produtos = Produto.objects.all().select_related('categoria')
     data = []
     
@@ -184,8 +197,8 @@ def api_produtos(request):
             'categoria': prod.categoria.nome if prod.categoria else 'Sem Categoria',
             'quantidade_atual': prod.quantidade_atual,
             'quantidade_minima': prod.quantidade_minima,
-            'unidade_medida': prod.unidade_medida,
-            'precisa_reposicao': prod.quantidade_atual < prod.quantidade_minima
+            'unidade_medida': getattr(prod, 'unidade_medida', 'Unidade'),
+            'precisa_reposicao': prod.quantidade_atual < getattr(prod, 'quantidade_minima', 20)
         })
         
     return JsonResponse({'status': 'sucesso', 'total': len(data), 'produtos': data}, json_dumps_params={'ensure_ascii': False})
