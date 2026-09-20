@@ -32,19 +32,6 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def dashboard(request):
-    if request.method == 'POST':
-        form = MovimentacaoForm(request.POST)
-        if form.is_valid():
-            movimentacao = form.save(commit=False)
-            movimentacao.usuario = request.user
-            movimentacao.save()
-            messages.success(request, f'Movimentação de {movimentacao.get_tipo_display()} registrada com sucesso!')
-            return redirect('dashboard')
-        else:
-            messages.error(request, 'Erro ao registrar movimentação. Verifique os dados inseridos.')
-    else:
-        form = MovimentacaoForm()
-
     produtos = Produto.objects.all().select_related('categoria')
     total_produtos = produtos.count()
     total_categorias = Categoria.objects.count()
@@ -60,7 +47,6 @@ def dashboard(request):
         'total_categorias': total_categorias,
         'reposicao_necessaria': reposicao_necessaria,
         'stock_em_dia': stock_em_dia,
-        'form': form,
     }
     return render(request, 'dashboard.html', context)
 
@@ -71,17 +57,21 @@ def reposicao_estoque(request):
     
     if request.method == 'POST':
         produto_id = request.POST.get('produto')
+        tipo = request.POST.get('tipo', 'ENTRADA')
         qtd = request.POST.get('quantidade')
+        obs = request.POST.get('observacao', '')
+
         if produto_id and qtd:
             prod = get_object_or_404(Produto, id=produto_id)
             Movimentacao.objects.create(
                 produto=prod,
-                tipo='ENTRADA',
+                tipo=tipo,
                 quantidade=int(qtd),
-                usuario=request.user
+                usuario=request.user,
+                observacao=obs
             )
-            messages.success(request, 'Reposição efetuada com sucesso!')
-            return redirect('reposicao')  # Redirecionamento correto conforme urls.py
+            messages.success(request, f'Movimentação de {tipo} registrada com sucesso!')
+            return redirect('reposicao_estoque')
 
     context = {
         'produtos': produtos,
