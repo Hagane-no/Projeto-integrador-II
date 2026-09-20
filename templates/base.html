@@ -97,20 +97,19 @@
     const btn = document.getElementById('btn-acessibilidade');
     let ativoAtual = btn.getAttribute('data-ativo') === 'true';
     
-    // Inverte o estado
     let novoEstado = !ativoAtual;
     btn.setAttribute('data-ativo', novoEstado);
 
     window.speechSynthesis.cancel();
 
     if (novoEstado) {
-      btn.style.backgroundColor = '#198754'; // Verde
+      btn.style.backgroundColor = '#198754';
       btn.innerHTML = '🔊';
       let fala = new SpeechSynthesisUtterance("Leitor de voz ativado.");
       fala.lang = 'pt-BR';
       window.speechSynthesis.speak(fala);
     } else {
-      btn.style.backgroundColor = '#0d6efd'; // Azul
+      btn.style.backgroundColor = '#0d6efd';
       btn.innerHTML = '🔇';
       let fala = new SpeechSynthesisUtterance("Leitor de voz desativado.");
       fala.lang = 'pt-BR';
@@ -122,10 +121,8 @@
     const btn = document.getElementById('btn-acessibilidade');
     let ativoAtual = btn.getAttribute('data-ativo') === 'true';
 
-    // Se estiver desativado, bloqueia imediatamente qualquer leitura
     if (!ativoAtual) return;
 
-    // Ignora cliques no próprio botão
     if (e.target.closest('#btn-acessibilidade')) return;
 
     let elemento = e.target.closest('h1, h2, h3, h4, h5, h6, p, span, a, button, td, th, label, div, .card');
