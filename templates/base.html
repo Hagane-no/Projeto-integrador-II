@@ -8,18 +8,29 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Estilo do menu visível e claro */
+        .navbar-dark .navbar-nav .nav-link {
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            opacity: 1 !important;
+        }
+        .navbar-dark .navbar-nav .nav-link:hover {
+            color: #e0e0e0 !important;
+        }
+        /* Botão Flutuante do Leitor de Voz */
         .btn-audio-float {
             position: fixed;
             bottom: 25px;
             right: 25px;
             z-index: 1050;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+            transition: all 0.3s ease;
         }
     </style>
 </head>
@@ -27,33 +38,33 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">
+        <a class="navbar-brand fw-bold text-white fs-4" href="{% url 'dashboard' %}">
             <i class="bi bi-box-seam me-2"></i>Confiro Já
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                    <a class="nav-link text-white" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'gerenciar_produtos' %}"><i class="bi bi-box me-1"></i> Produtos</a>
+                    <a class="nav-link text-white" href="{% url 'gerenciar_produtos' %}"><i class="bi bi-box me-1"></i> Produtos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'gerenciar_categorias' %}"><i class="bi bi-tags me-1"></i> Categorias</a>
+                    <a class="nav-link text-white" href="{% url 'gerenciar_categorias' %}"><i class="bi bi-tags me-1"></i> Categorias</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'reposicao' %}"><i class="bi bi-arrow-left-right me-1"></i> Movimentações</a>
+                    <a class="nav-link text-white" href="{% url 'reposicao' %}"><i class="bi bi-arrow-left-right me-1"></i> Movimentações</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'historico' %}"><i class="bi bi-clock-history me-1"></i> Histórico</a>
+                    <a class="nav-link text-white" href="{% url 'historico' %}"><i class="bi bi-clock-history me-1"></i> Histórico</a>
                 </li>
             </ul>
             <div class="d-flex align-items-center text-white">
-                <span class="me-3"><i class="bi bi-person-circle me-1"></i> {{ user.username }}</span>
-                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right"></i> Sair</a>
+                <span class="me-3 fw-semibold"><i class="bi bi-person-circle me-1"></i> {{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm fw-bold"><i class="bi bi-box-arrow-right"></i> Sair</a>
             </div>
         </div>
     </div>
@@ -62,7 +73,7 @@
 <div class="container mb-5">
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show fw-bold" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -73,36 +84,58 @@
     {% endblock %}
 </div>
 
-<!-- Botão Flutuante do Leitor de Voz -->
-<button type="button" id="btnAudioTTS" class="btn btn-primary btn-audio-float" onclick="falarConteudoPagina()" title="Ouvir Conteúdo da Página">
-    <i class="bi bi-mega-phone-fill fs-4" id="iconTTS"></i>
+<!-- Botão Flutuante do Leitor de Voz por Seleção -->
+<button type="button" id="btnAudioTTS" class="btn btn-primary btn-audio-float" onclick="toggleLeitorVoz()" title="Auxiliar de Leitura (Lê texto selecionado)">
+    <i class="bi bi-volume-up-fill fs-3" id="iconTTS"></i>
 </button>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let synth = window.speechSynthesis;
-    let isSpeaking = false;
+    let leitorAtivo = false;
 
-    function falarConteudoPagina() {
-        if (isSpeaking) {
+    function toggleLeitorVoz() {
+        const btn = document.getElementById('btnAudioTTS');
+        const icon = document.getElementById('iconTTS');
+
+        if (synth.speaking) {
             synth.cancel();
-            isSpeaking = false;
-            document.getElementById('iconTTS').className = 'bi bi-mega-phone-fill fs-4';
-            return;
         }
 
-        let texto = document.body.innerText;
+        if (!leitorAtivo) {
+            leitorAtivo = true;
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+            icon.className = 'bi bi-volume-up-fill fs-3';
+            
+            let textoSelecionado = window.getSelection().toString().trim();
+            if (textoSelecionado.length > 0) {
+                falarTexto(textoSelecionado);
+            } else {
+                alert("Leitor Ativado! Selecione qualquer texto na tela para ouvir a leitura.");
+            }
+        } else {
+            leitorAtivo = false;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+            icon.className = 'bi bi-volume-mute-fill fs-3';
+        }
+    }
+
+    document.addEventListener('selectionchange', function() {
+        if (leitorAtivo) {
+            let texto = window.getSelection().toString().trim();
+            if (texto.length > 0) {
+                synth.cancel();
+                falarTexto(texto);
+            }
+        }
+    });
+
+    function falarTexto(texto) {
         let utterance = new SpeechSynthesisUtterance(texto);
         utterance.lang = 'pt-BR';
-
-        utterance.onend = function() {
-            isSpeaking = false;
-            document.getElementById('iconTTS').className = 'bi bi-mega-phone-fill fs-4';
-        };
-
         synth.speak(utterance);
-        isSpeaking = true;
-        document.getElementById('iconTTS').className = 'bi bi-square-fill fs-4';
     }
 </script>
 </body>
