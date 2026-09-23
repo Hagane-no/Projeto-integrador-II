@@ -58,15 +58,26 @@ def reposicao_estoque(request):
     if request.method == 'POST':
         produto_id = request.POST.get('produto')
         tipo = request.POST.get('tipo', 'ENTRADA')
-        qtd = request.POST.get('quantidade')
+        qtd_str = request.POST.get('quantidade')
         obs = request.POST.get('observacao', '')
 
-        if produto_id and qtd:
+        if produto_id and qtd_str:
+            qtd = int(qtd_str)
             prod = get_object_or_404(Produto, id=produto_id)
+
+            # VALIDAÇÃO DE STOCK DISPONÍVEL
+            if tipo == 'SAIDA':
+                if prod.quantidade_atual <= 0:
+                    messages.error(request, f'Quantidade indisponível para saída (Stock Atual: 0).')
+                    return redirect('reposicao')
+                elif qtd > prod.quantidade_atual:
+                    messages.error(request, f'Ação não permitida: Por favor selecione até a quantidade atual ({prod.quantidade_atual} {prod.unidade_medida}).')
+                    return redirect('reposicao')
+
             Movimentacao.objects.create(
                 produto=prod,
                 tipo=tipo,
-                quantidade=int(qtd),
+                quantidade=qtd,
                 usuario=request.user,
                 observacao=obs
             )
