@@ -17,7 +17,7 @@ class Produto(models.Model):
     quantidade_minima = models.IntegerField(default=0)
     unidade_medida = models.CharField(max_length=50, default='Unidade')
 
-    def _str_(self):
+    def __str__(self):
         return self.nome
 
     @property
@@ -46,6 +46,7 @@ class Movimentacao(models.Model):
             if self.tipo == 'ENTRADA':
                 self.produto.quantidade_atual += self.quantidade
             elif self.tipo == 'SAIDA':
-                self.produto.quantidade_atual -= self.quantidade
+                nova_qtd = self.produto.quantidade_atual - self.quantidade
+                self.produto.quantidade_atual = max(0, nova_qtd)
             self.produto.save()
         super().save(*args, **kwargs)
