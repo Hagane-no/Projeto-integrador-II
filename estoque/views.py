@@ -1,202 +1,152 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from .models import Produto, Categoria, Movimentacao
-from .forms import MovimentacaoForm, ProdutoForm, CategoriaForm
 
+# Verifica se o usuário é Administrador
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+# ----------------------------------------------------
+# AUTENTICAÇÃO E CADASTRO
+# ----------------------------------------------------
 
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
-
+        
     if request.method == 'POST':
-        usuario_input = request.POST.get('username')
-        senha_input = request.POST.get('password')
-        user = authenticate(request, username=usuario_input, password=senha_input)
-
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
         if user is not None:
-            login(request, user)
-            return redirect('dashboard')
+            if user.is_active:
+                login(request, user)
+                return redirect('dashboard')
+            else:
+                messages.error(request, 'Sua conta ainda não foi aprovada pelo Administrador.')
         else:
             messages.error(request, 'Utilizador ou palavra-passe incorretos.')
-
+            
     return render(request, 'login.html')
-
 
 def logout_view(request):
     logout(request)
     return redirect('login')
 
+def register_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+        
+        if password != password_confirm:
+            messages.error(request, 'As palavras-passe não coincidem.')
+            return render(request, 'register.html')
+            
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Este nome de utilizador já existe.')
+            return render(request, 'register.html')
+            
+        # Cria o usuário INATIVO aguardando aprovação do ADM
+        user = User.objects.create_user(username=username, password=password)
+        user.is_active = False  
+        user.save()
+        
+        messages.success(request, 'Conta solicitada com sucesso! Aguarde a aprovação do Administrador para fazer login.')
+        return redirect('login')
+        
+    return render(request, 'register.html')
 
-@login_required(login_url='login')
-def dashboard(request):
-    produtos = Produto.objects.all().select_related('categoria')
+# ----------------------------------------------------
+# PAINEL DO ADMINISTRADOR (GERENCIAR USUÁRIOS)
+# ----------------------------------------------------
+
+@login_required
+@user_passes_test(is_admin)
+def gerenciar_usuarios_view(request):
+    usuarios_pendentes = User.objects.filter(is_active=False)
+    todos_usuarios = User.objects.all().order_by('-date_joined')
+    return render(request, 'gerenciar_usuarios.html', {
+        'usuarios_pendentes': usuarios_pendentes,
+        'todos_usuarios': todos_usuarios
+    })
+
+@login_required
+@user_passes_test(is_admin)
+def aprovar_usuario_view(request, user_id):
+    usuario = get_object_or_404(User, id=user_id)
+    usuario.is_active = True
+    usuario.save()
+    messages.success(request, f'O utilizador "{usuario.username}" foi aprovado com sucesso!')
+    return redirect('gerenciar_usuarios')
+
+# ----------------------------------------------------
+# PRINCIPAIS VISUALIZAÇÕES DO SISTEMA
+# ----------------------------------------------------
+
+@login_required
+def dashboard_view(request):
+    produtos = Produto.objects.all()
     total_produtos = produtos.count()
-    total_categorias = Categoria.objects.count()
+    criticos = [p for p in produtos if p.quantidade < p.quantidade_minima]
+    em_dia = total_produtos - len(criticos)
     
-    produtos_criticos = [p for p in produtos if p.precisa_reposicao]
-    reposicao_necessaria = len(produtos_criticos)
-    stock_em_dia = total_produtos - reposicao_necessaria
-
     context = {
-        'produtos': produtos,
-        'produtos_criticos': produtos_criticos,
         'total_produtos': total_produtos,
-        'total_categorias': total_categorias,
-        'reposicao_necessaria': reposicao_necessaria,
-        'stock_em_dia': stock_em_dia,
+        'quantidade_criticos': len(criticos),
+        'quantidade_em_dia': em_dia,
+        'produtos_criticos': criticos,
     }
     return render(request, 'dashboard.html', context)
 
-
-@login_required(login_url='login')
-def reposicao_estoque(request):
-    produtos = Produto.objects.all().select_related('categoria')
-    
-    if request.method == 'POST':
-        produto_id = request.POST.get('produto')
-        tipo = request.POST.get('tipo', 'ENTRADA')
-        qtd_str = request.POST.get('quantidade')
-        obs = request.POST.get('observacao', '')
-
-        if produto_id and qtd_str:
-            qtd = int(qtd_str)
-            prod = get_object_or_404(Produto, id=produto_id)
-
-            # VALIDAÇÃO DE STOCK DISPONÍVEL
-            if tipo == 'SAIDA':
-                if prod.quantidade_atual <= 0:
-                    messages.error(request, f'Quantidade indisponível para saída (Stock Atual: 0).')
-                    return redirect('reposicao')
-                elif qtd > prod.quantidade_atual:
-                    messages.error(request, f'Ação não permitida: Por favor selecione até a quantidade atual ({prod.quantidade_atual} {prod.unidade_medida}).')
-                    return redirect('reposicao')
-
-            Movimentacao.objects.create(
-                produto=prod,
-                tipo=tipo,
-                quantidade=qtd,
-                usuario=request.user,
-                observacao=obs
-            )
-            messages.success(request, f'Movimentação de {tipo} registrada com sucesso!')
-            return redirect('reposicao')
-
-    context = {
-        'produtos': produtos,
-    }
-    return render(request, 'reposicao.html', context)
-
-
-@login_required(login_url='login')
-def historico(request):
-    movimentacoes = Movimentacao.objects.all().select_related('produto', 'usuario').order_by('-data')
-    context = {
-        'movimentacoes': movimentacoes,
-    }
-    return render(request, 'historico.html', context)
-
-
-# --- GESTÃO DE PRODUTOS ---
-
-@login_required(login_url='login')
-def gerenciar_produtos(request):
-    if request.method == 'POST':
-        form = ProdutoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Produto cadastrado com sucesso!')
-            return redirect('gerenciar_produtos')
-        else:
-            messages.error(request, 'Erro ao cadastrar produto. Verifique os campos.')
-    else:
-        form = ProdutoForm()
-
-    produtos = Produto.objects.all().select_related('categoria')
+@login_required
+def produtos_view(request):
+    produtos = Produto.objects.all()
     categorias = Categoria.objects.all()
-    
-    context = {
-        'produtos': produtos,
-        'categorias': categorias,
-        'form': form,
-    }
-    return render(request, 'produtos.html', context)
-
-
-@login_required(login_url='login')
-def editar_produto(request, pk):
-    produto = get_object_or_404(Produto, pk=pk)
-    if request.method == 'POST':
-        form = ProdutoForm(request.POST, instance=produto)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Produto atualizado com sucesso!')
-            return redirect('gerenciar_produtos')
-    else:
-        form = ProdutoForm(instance=produto)
-
-    return render(request, 'editar_produto.html', {'form': form, 'produto': produto})
-
-
-@login_required(login_url='login')
-def deletar_produto(request, pk):
-    produto = get_object_or_404(Produto, pk=pk)
-    if request.method == 'POST':
-        produto.delete()
-        messages.success(request, 'Produto removido com sucesso!')
-        return redirect('gerenciar_produtos')
-    return render(request, 'confirmar_delecao.html', {'objeto': produto, 'tipo': 'Produto'})
-
-
-# --- GESTÃO DE CATEGORIAS ---
-
-@login_required(login_url='login')
-def gerenciar_categorias(request):
-    if request.method == 'POST':
-        form = CategoriaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Categoria cadastrada com sucesso!')
-            return redirect('gerenciar_categorias')
-        else:
-            messages.error(request, 'Erro ao cadastrar categoria. Verifique os campos.')
-    else:
-        form = CategoriaForm()
-
-    categorias = Categoria.objects.all()
-    context = {
-        'categorias': categorias,
-        'form': form,
-    }
-    return render(request, 'categorias.html', context)
-
-
-@login_required(login_url='login')
-def deletar_categoria(request, pk):
-    categoria = get_object_or_404(Categoria, pk=pk)
-    if request.method == 'POST':
-        categoria.delete()
-        messages.success(request, 'Categoria removida com sucesso!')
-        return redirect('gerenciar_categorias')
-    return render(request, 'confirmar_delecao.html', {'objeto': categoria, 'tipo': 'Categoria'})
-
+    return render(request, 'produtos.html', {'produtos': produtos, 'categorias': categorias})
 
 @login_required
-def api_produtos(request):
-    produtos = Produto.objects.all().select_related('categoria')
-    data = []
-    
-    for prod in produtos:
-        data.append({
-            'id': prod.id,
-            'nome': prod.nome,
-            'categoria': prod.categoria.nome if prod.categoria else 'Sem Categoria',
-            'quantidade_atual': prod.quantidade_atual,
-            'quantidade_minima': prod.quantidade_minima,
-            'unidade_medida': prod.unidade_medida,
-            'precisa_reposicao': prod.precisa_reposicao
-        })
+def categorias_view(request):
+    categorias = Categoria.objects.all()
+    return render(request, 'categorias.html', {'categorias': categorias})
+
+@login_required
+def movimentacoes_view(request):
+    produtos = Produto.objects.all()
+    if request.method == 'POST':
+        produto_id = request.POST.get('produto')
+        tipo = request.POST.get('tipo')
+        quantidade = int(request.POST.get('quantidade', 0))
+        observacao = request.POST.get('observacao', '')
         
-    return JsonResponse({'status': 'sucesso', 'total': len(data), 'produtos': data}, json_dumps_params={'ensure_ascii': False})
+        produto = get_object_or_404(Produto, id=produto_id)
+        
+        if tipo == 'SAIDA' and produto.quantidade < quantidade:
+            messages.error(request, 'Quantidade insuficiente em estoque.')
+        else:
+            if tipo == 'ENTRADA':
+                produto.quantidade += quantidade
+            else:
+                produto.quantidade -= quantidade
+            produto.save()
+            
+            Movimentacao.objects.create(
+                produto=produto,
+                usuario=request.user,
+                tipo=tipo,
+                quantidade=quantidade,
+                observacao=observacao
+            )
+            messages.success(request, 'Movimentação registrada com sucesso!')
+            return redirect('movimentacoes')
+            
+    return render(request, 'movimentacoes.html', {'produtos': produtos})
+
+@login_required
+def historico_view(request):
+    historico = Movimentacao.objects.all().order_by('-data_hora')
+    return render(request, 'historico.html', {'historico': historico})
