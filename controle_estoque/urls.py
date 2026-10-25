@@ -1,28 +1,15 @@
-from django.contrib import admin
 from django.urls import path
-from estoque.views import (
-    dashboard, reposicao_estoque, historico, login_view, logout_view,
-    gerenciar_produtos, editar_produto, deletar_produto,
-    gerenciar_categorias, deletar_categoria, api_produtos
-)
+from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('login/', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
-    path('', dashboard, name='dashboard'),
-    path('reposicao/', reposicao_estoque, name='reposicao'),
-    path('historico/', historico, name='historico'),
-    
-    # Produtos
-    path('produtos/', gerenciar_produtos, name='gerenciar_produtos'),
-    path('produtos/editar/<int:pk>/', editar_produto, name='editar_produto'),
-    path('produtos/deletar/<int:pk>/', deletar_produto, name='deletar_produto'),
-    
-    # Categorias
-    path('categorias/', gerenciar_categorias, name='gerenciar_categorias'),
-    path('categorias/deletar/<int:pk>/', deletar_categoria, name='deletar_categoria'),
-    
-    # API JSON
-    path('api/produtos/', api_produtos, name='api_produtos'),
+    path('', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('register/', views.register_view, name='register'),
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('produtos/', views.produtos_view, name='produtos'),
+    path('categorias/', views.categorias_view, name='categorias'),
+    path('movimentacoes/', views.movimentacoes_view, name='movimentacoes'),
+    path('historico/', views.historico_view, name='historico'),
+    path('usuarios/', views.gerenciar_usuarios_view, name='gerenciar_usuarios'),
+    path('usuarios/aprovar/<int:user_id>/', views.aprovar_usuario_view, name='aprovar_usuario'),
 ]
