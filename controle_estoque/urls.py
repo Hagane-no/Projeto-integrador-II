@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from estoque import views
 
 urlpatterns = [
     path('', views.login_view, name='login'),
