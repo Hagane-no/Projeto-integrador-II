@@ -1,4 +1,4 @@
-
+```python
 from django.urls import path
 from . import views
 
@@ -10,7 +10,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('produtos/', views.produtos_view, name='produtos'),
 
-    path('produtos/', views.produtos_view, name='produtos'),
+    path('categorias/', views.categorias_view, name='categorias'),
     path(
         'categorias/criar/',
         views.criar_categoria,
@@ -35,3 +35,4 @@ urlpatterns = [
         name='aprovar_usuario'
     ),
 ]
+```
