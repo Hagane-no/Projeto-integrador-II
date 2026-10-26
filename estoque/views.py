@@ -1,4 +1,6 @@
 
+from decimal import Decimal, InvalidOperation
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -41,10 +43,7 @@ def login_view(request):
                 'Sua conta ainda não foi aprovada pelo administrador.'
             )
         else:
-            messages.error(
-                request,
-                'Usuário ou senha incorretos.'
-            )
+            messages.error(request, 'Usuário ou senha incorretos.')
 
     return render(request, 'login.html')
 
@@ -68,10 +67,7 @@ def register_view(request):
             return render(request, 'register.html')
 
         if password != password_confirm:
-            messages.error(
-                request,
-                'As senhas não coincidem.'
-            )
+            messages.error(request, 'As senhas não coincidem.')
             return render(request, 'register.html')
 
         if User.objects.filter(username=username).exists():
@@ -83,10 +79,9 @@ def register_view(request):
 
         user = User.objects.create_user(
             username=username,
-            password=password
+            password=password,
+            is_active=False
         )
-        user.is_active = False
-        user.save()
 
         messages.success(
             request,
@@ -128,7 +123,6 @@ def aprovar_usuario_view(request, user_id):
     if request.method == 'POST':
         usuario.is_active = True
         usuario.save(update_fields=['is_active'])
-
         messages.success(
             request,
             f'O usuário "{usuario.username}" foi aprovado.'
@@ -143,15 +137,12 @@ def aprovar_usuario_view(request, user_id):
 
 @login_required
 def dashboard_view(request):
-    produtos = Produto.objects.select_related(
-        'categoria'
-    ).all()
+    produtos = Produto.objects.select_related('categoria').all()
 
     total_produtos = produtos.count()
 
     produtos_criticos = [
-        produto
-        for produto in produtos
+        produto for produto in produtos
         if produto.quantidade <= produto.quantidade_minima
     ]
 
@@ -174,6 +165,89 @@ def dashboard_view(request):
 
 @login_required
 def produtos_view(request):
+    if request.method == 'POST':
+        if not request.user.is_staff:
+            messages.error(
+                request,
+                'Somente administradores podem cadastrar produtos.'
+            )
+            return redirect('produtos')
+
+        nome = request.POST.get('nome', '').strip()
+        categoria_id = request.POST.get('categoria', '').strip()
+        quantidade_texto = request.POST.get('quantidade', '0').strip()
+        minimo_texto = request.POST.get('quantidade_minima', '0').strip()
+        preco_texto = request.POST.get('preco', '0').strip()
+
+        if not nome:
+            messages.error(request, 'Informe o nome do produto.')
+            return redirect('produtos')
+
+        categoria = get_object_or_404(
+            Categoria,
+            id=categoria_id
+        )
+
+        try:
+            quantidade = int(quantidade_texto)
+            quantidade_minima = int(minimo_texto)
+            preco = Decimal(preco_texto.replace(',', '.'))
+        except (ValueError, InvalidOperation):
+            messages.error(
+                request,
+                'Informe quantidades inteiras e um preço válido.'
+            )
+            return redirect('produtos')
+
+        if quantidade < 0 or quantidade_minima < 0:
+            messages.error(
+                request,
+                'As quantidades não podem ser negativas.'
+            )
+            return redirect('produtos')
+
+        if not preco.is_finite() or preco < 0:
+            messages.error(
+                request,
+                'O preço deve ser um valor válido e não negativo.'
+            )
+            return redirect('produtos')
+
+        if preco.as_tuple().exponent < -2:
+            messages.error(
+                request,
+                'O preço deve ter no máximo duas casas decimais.'
+            )
+            return redirect('produtos')
+
+        try:
+            produto = Produto(
+                nome=nome,
+                categoria=categoria,
+                quantidade=quantidade,
+                quantidade_minima=quantidade_minima,
+                preco=preco,
+            )
+            produto.full_clean()
+            produto.save()
+        except Exception as erro:
+            from django.core.exceptions import ValidationError
+
+            if isinstance(erro, ValidationError):
+                messages.error(
+                    request,
+                    'Não foi possível cadastrar o produto. '
+                    'Confira os dados informados.'
+                )
+                return redirect('produtos')
+            raise
+
+        messages.success(
+            request,
+            f'Produto "{produto.nome}" cadastrado com sucesso.'
+        )
+        return redirect('produtos')
+
     produtos = Produto.objects.select_related(
         'categoria'
     ).all().order_by('nome')
@@ -212,10 +286,7 @@ def criar_categoria(request):
         nome = request.POST.get('nome', '').strip()
 
         if not nome:
-            messages.error(
-                request,
-                'Informe o nome da categoria.'
-            )
+            messages.error(request, 'Informe o nome da categoria.')
         elif Categoria.objects.filter(nome__iexact=nome).exists():
             messages.error(
                 request,
@@ -223,7 +294,6 @@ def criar_categoria(request):
             )
         else:
             Categoria.objects.create(nome=nome)
-
             messages.success(
                 request,
                 'Categoria cadastrada com sucesso.'
@@ -253,8 +323,8 @@ def movimentacoes_view(request):
     ).all().order_by('nome')
 
     if request.method == 'POST':
-        produto_id = request.POST.get('produto')
-        tipo = request.POST.get('tipo')
+        produto_id = request.POST.get('produto', '').strip()
+        tipo = request.POST.get('tipo', '')
         quantidade_texto = request.POST.get('quantidade', '').strip()
         observacao = request.POST.get('observacao', '').strip()
 
@@ -281,10 +351,7 @@ def movimentacoes_view(request):
             )
             return redirect('movimentacoes')
 
-        produto = get_object_or_404(
-            Produto,
-            id=produto_id
-        )
+        produto = get_object_or_404(Produto, id=produto_id)
 
         if tipo == 'SAIDA' and produto.quantidade < quantidade:
             messages.error(
@@ -312,7 +379,6 @@ def movimentacoes_view(request):
             request,
             'Movimentação registrada com sucesso.'
         )
-
         return redirect('movimentacoes')
 
     return render(
@@ -344,7 +410,7 @@ def historico_view(request):
 
 
 # --------------------------------------------------
-# COMPATIBILIDADE COM OS NOMES DAS ROTAS ATUAIS
+# COMPATIBILIDADE COM NOMES DE ROTAS ANTIGAS
 # --------------------------------------------------
 
 lista_produtos = produtos_view
