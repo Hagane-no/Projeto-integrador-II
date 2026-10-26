@@ -1,99 +1,57 @@
 {% extends 'base.html' %}
 
-{% block title %}Gerenciar Produtos - Confiro Já{% endblock %}
-
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold"><i class="bi bi-box-seam me-2"></i>Gerenciamento de Produtos</h2>
-        <p class="text-muted mb-0">Listagem e controlo de produtos em estoque.</p>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">📦 Gestão de Produtos</h3>
+        {% if request.user.is_staff %}
+            <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalProduto">
+                + Novo Produto
+            </button>
+        {% endif %}
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
-        <i class="bi bi-plus-lg me-1"></i> Novo Produto
-    </button>
-</div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-        <div class="table-responsive">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
+                <thead class="table-light">
                     <tr>
-                        <th>Nome</th>
+                        <th>Nome do Produto</th>
                         <th>Categoria</th>
-                        <th>Quantidade Atual</th>
-                        <th>Mínimo</th>
-                        <th class="text-end pe-4">Ações</th>
+                        <th>Quantidade</th>
+                        <th>Qtd. Mínima</th>
+                        <th>Preço (R$)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for p in produtos %}
-                        <tr>
-                            <td class="fw-bold">{{ p.nome }}</td>
-                            <td>{{ p.categoria.nome }}</td>
-                            <td class="fw-bold">{{ p.quantidade_atual }} {{ p.unidade_medida }}</td>
-                            <td>{{ p.quantidade_minima }}</td>
-                            <td class="text-end pe-4">
-                                {% if p.id %}
-                                    <a href="{% url 'deletar_produto' p.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deseja excluir este produto?');">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                {% endif %}
-                            </td>
-                        </tr>
+                    {% for produto in produtos %}
+                    <tr>
+                        <td class="fw-bold">{{ produto.nome }}</td>
+                        <td>{{ produto.categoria.nome }}</td>
+                        <td>
+                            <span class="badge {% if produto.quantidade <= produto.quantidade_minima %}bg-danger{% else %}bg-success{% endif %} fs-6">
+                                {{ produto.quantidade }}
+                            </span>
+                        </td>
+                        <td>{{ produto.quantidade_minima }}</td>
+                        <td>R$ {{ produto.preco|floatformat:2 }}</td>
+                    </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">Nenhum produto cadastrado.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Nenhum produto cadastrado no sistema.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Novo Produto alinhado 100% com ProdutoForm -->
-<div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Cadastrar Novo Produto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nome do Produto</label>
-                        <input type="text" name="nome" class="form-control" placeholder="Nome do produto" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Categoria</label>
-                        <select name="categoria" class="form-select" required>
-                            <option value="">Selecione uma categoria...</option>
-                            {% for c in categorias %}
-                                <option value="{{ c.id }}">{{ c.nome }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Quantidade Inicial</label>
-                        <input type="number" name="quantidade_atual" class="form-control" value="0" min="0" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Quantidade Mínima</label>
-                        <input type="number" name="quantidade_minima" class="form-control" value="0" min="0" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Unidade de Medida</label>
-                        <input type="text" name="unidade_medida" class="form-control" value="Unidade" placeholder="Ex: Unidade, Caixa, Pacote" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Produto</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
