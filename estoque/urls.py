@@ -10,7 +10,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('produtos/', views.produtos_view, name='produtos'),
 
-    path('categorias/', views.categorias_view, name='categorias'),
+    path('produtos/', views.produtos_view, name='produtos'),
     path(
         'categorias/criar/',
         views.criar_categoria,
