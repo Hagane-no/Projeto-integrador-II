@@ -1,84 +1,159 @@
+
 {% extends 'base.html' %}
 
 {% block title %}Movimentações de Estoque - Confiro Já{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold"><i class="bi bi-arrow-left-right me-2"></i>Movimentações de Estoque</h2>
-        <p class="text-muted mb-0">Registre a entrada ou saída de materiais no sistema.</p>
-    </div>
-</div>
+<div class="container-fluid py-3">
 
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-        <h5 class="fw-bold mb-3"><i class="bi bi-plus-slash-minus me-2"></i>Registrar Entrada / Saída</h5>
-        <form method="POST">
-            {% csrf_token %}
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Produto</label>
-                    <select name="produto" class="form-select" required>
-                        <option value="">Selecione um produto...</option>
-                        {% for p in produtos %}
-                            <option value="{{ p.id }}">{{ p.nome }} ({{ p.quantidade_atual }} {{ p.unidade_medida }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Tipo de Ação</label>
-                    <select name="tipo" class="form-select" required>
-                        <option value="ENTRADA">Entrada (+ Reposição)</option>
-                        <option value="SAIDA">Saída (- Retirada)</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">Quantidade</label>
-                    <input type="number" name="quantidade" class="form-control" min="1" required>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-check-lg me-1"></i> Salvar Movimentação
-                    </button>
-                </div>
-                <div class="col-12">
-                    <label class="form-label fw-bold">Observação</label>
-                    <input type="text" name="observacao" class="form-control" placeholder="Ex: Entrega de fornecedor / Retirada para uso em sala">
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-dark text-white py-3">
-        <h5 class="mb-0 fs-6 fw-bold"><i class="bi bi-list-check me-2"></i>Status Atual dos Produtos</h5>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Produto</th>
-                        <th>Categoria</th>
-                        <th>Estoque Atual</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in produtos %}
-                        <tr>
-                            <td class="fw-bold">{{ p.nome }}</td>
-                            <td>{{ p.categoria.nome }}</td>
-                            <td><span class="badge bg-primary">{{ p.quantidade_atual }} {{ p.unidade_medida }}</span></td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-4 text-muted">Nenhum produto cadastrado.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-arrow-left-right me-2"></i>
+                Movimentações de Estoque
+            </h2>
+            <p class="text-muted mb-0">
+                Registre a entrada ou saída de materiais no sistema.
+            </p>
         </div>
     </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-plus-slash-minus me-2"></i>
+                Registrar Entrada / Saída
+            </h5>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="produto" class="form-label fw-bold">
+                            Produto
+                        </label>
+                        <select id="produto" name="produto" class="form-select" required>
+                            <option value="">Selecione um produto...</option>
+                            {% for p in produtos %}
+                                <option value="{{ p.id }}">
+                                    {{ p.nome }} (Estoque: {{ p.quantidade }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="tipo" class="form-label fw-bold">
+                            Tipo de movimentação
+                        </label>
+                        <select id="tipo" name="tipo" class="form-select" required>
+                            <option value="ENTRADA">Entrada (+)</option>
+                            <option value="SAIDA">Saída (-)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="quantidade" class="form-label fw-bold">
+                            Quantidade
+                        </label>
+                        <input
+                            id="quantidade"
+                            type="number"
+                            name="quantidade"
+                            class="form-control"
+                            min="1"
+                            step="1"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Salvar Movimentação
+                        </button>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="observacao" class="form-label fw-bold">
+                            Observação
+                        </label>
+                        <input
+                            id="observacao"
+                            type="text"
+                            name="observacao"
+                            class="form-control"
+                            maxlength="1000"
+                            placeholder="Ex.: Entrega de fornecedor ou retirada para uso em sala"
+                        >
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3">
+            <h5 class="mb-0 fs-6 fw-bold">
+                <i class="bi bi-list-check me-2"></i>
+                Status Atual dos Produtos
+            </h5>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Produto</th>
+                            <th>Categoria</th>
+                            <th>Estoque Atual</th>
+                            <th>Estoque Mínimo</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for p in produtos %}
+                            <tr>
+                                <td class="fw-bold">{{ p.nome }}</td>
+                                <td>{{ p.categoria.nome }}</td>
+                                <td>{{ p.quantidade }}</td>
+                                <td>{{ p.quantidade_minima }}</td>
+                                <td>
+                                    {% if p.quantidade <= p.quantidade_minima %}
+                                        <span class="badge bg-danger">
+                                            Reposição necessária
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            Estoque adequado
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Nenhum produto cadastrado.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
