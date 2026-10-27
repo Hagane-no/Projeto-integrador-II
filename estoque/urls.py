@@ -7,10 +7,10 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('produtos/', views.gerenciar_produtos, name='produtos'),
-    path('categorias/', views.lista_categorias, name='categorias'),
+    path('categorias/', views.gerenciar_categorias, name='categorias'),
     path('categorias/criar/', views.criar_categoria, name='criar_categoria'),
     path('movimentacoes/', views.registrar_movimentacao, name='movimentacoes'),
-    path('historico/', views.historico_movimentacoes, name='historico'),
+    path('historico/', views.historico, name='historico'),
     path('usuarios/', views.gerenciar_usuarios, name='gerenciar_usuarios'),
     path('usuarios/aprovar/<int:user_id>/', views.aprovar_usuario, name='aprovar_usuario'),
 ]
