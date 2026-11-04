@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confiro Já - Controle de Estoque</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}">📦 Confiro Já</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'produtos' %}">Produtos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'categorias' %}">Categorias</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'movimentacoes' %}">Movimentações</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'historico' %}">Histórico</a></li>
+                    {% if request.user.is_staff %}
+                        <li class="nav-item"><a class="nav-link text-warning fw-bold" href="{% url 'gerenciar_usuarios' %}">👑 Aprovar Usuários</a></li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-white">Olá, <strong>{{ request.user.username }}</strong></span>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Sair</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Script de Timeout por Inatividade (5 minutos) -->
+    <script>
+        (function () {
+            let inactivityTime = function () {
+                let time;
+                
+                window.onload = resetTimer;
+                window.onmousemove = resetTimer;
+                window.onkeypress = resetTimer;
+                window.onclick = resetTimer;
+                window.onscroll = resetTimer;
+
+                function logoutUser() {
+                    alert('Sua sessão expirou por inatividade de 5 minutos.');
+                    window.location.href = "{% url 'logout' %}";
+                }
+
+                function resetTimer() {
+                    clearTimeout(time);
+                    // 5 minutos = 300.000 milissegundos
+                    time = setTimeout(logoutUser, 300000); 
+                }
+            };
+            inactivityTime();
+        })();
+    </script>
+    <script href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
