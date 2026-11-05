@@ -20,7 +20,7 @@
                 <tbody>
                     {% for mov in movimentacoes %}
                     <tr>
-                        <td>{{ mov.data_hora|date:"d/m/Y H:i" }}</td>
+                        <td>{{ mov.data|date:"d/m/Y H:i" }}</td>
                         <td>
                             {% if mov.tipo == 'ENTRADA' %}
                                 <span class="badge bg-success">Entrada</span>
