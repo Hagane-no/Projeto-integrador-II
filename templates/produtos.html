@@ -27,9 +27,9 @@
                     <tr>
                         <th>Nome do Produto</th>
                         <th>Categoria</th>
-                        <th>Quantidade</th>
+                        <th>Quantidade Atual</th>
                         <th>Qtd. Mínima</th>
-                        <th>Preço (R$)</th>
+                        <th>Unidade</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,12 +38,12 @@
                         <td class="fw-bold">{{ produto.nome }}</td>
                         <td>{{ produto.categoria.nome }}</td>
                         <td>
-                            <span class="badge {% if produto.quantidade <= produto.quantidade_minima %}bg-danger{% else %}bg-success{% endif %} fs-6">
-                                {{ produto.quantidade }}
+                            <span class="badge {% if produto.quantidade_atual <= produto.quantidade_minima %}bg-danger{% else %}bg-success{% endif %} fs-6">
+                                {{ produto.quantidade_atual }}
                             </span>
                         </td>
                         <td>{{ produto.quantidade_minima }}</td>
-                        <td>R$ {{ produto.preco|floatformat:2 }}</td>
+                        <td>{{ produto.unidade_medida }}</td>
                     </tr>
                     {% empty %}
                     <tr>
