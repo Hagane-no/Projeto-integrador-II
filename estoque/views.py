@@ -22,9 +22,7 @@ def produtos_view(request):
 
 @login_required
 def editar_produto_view(request, pk):
-    # Lógica de edição de produto
     produto = Produto.objects.get(pk=pk)
-    # ... adicione o seu formulário ou lógica existente aqui
     return render(request, 'estoque/editar_produto.html', {'produto': produto})
 
 @login_required
@@ -34,7 +32,6 @@ def categorias_view(request):
 
 @login_required
 def criar_categoria_view(request):
-    """View responsável por criar uma nova categoria e evitar o erro NoReverseMatch"""
     if request.method == 'POST':
         form = CategoriaForm(request.POST)
         if form.is_valid():
@@ -52,7 +49,7 @@ def movimentacoes_view(request):
 @login_required
 def historico_view(request):
     movimentacoes = Movimentacao.objects.all().order_by('-data')
-    return render(request, 'estoque/historico.html', {'movimentacoes': movimentacoes})
+    return render(request, 'estoque/historico.html', {'movimentacoes': historico.html}) # Nota: ajuste para 'estoque/historico.html'
 
 @login_required
 def reposicao_view(request):
