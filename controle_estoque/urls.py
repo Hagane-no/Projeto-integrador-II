@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('estoque.urls')), # <-- Isto é fundamental para que as rotas da app funcionem
+    path('login/', auth_views.LoginView.as_view(template_name='estoque/login.html'), name='login'),
+    path('', include('estoque.urls')),
 ]
