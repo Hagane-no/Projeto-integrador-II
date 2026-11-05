@@ -17,21 +17,20 @@ class MovimentacaoForm(forms.ModelForm):
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
-        fields = ['nome', 'categoria', 'quantidade_atual', 'quantidade_minima', 'unidade_medida']
+        fields = ['nome', 'categoria', 'quantidade', 'quantidade_minima', 'preco']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do produto'}),
             'categoria': forms.Select(attrs={'class': 'form-select'}),
-            'quantidade_atual': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'quantidade': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'quantidade_minima': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
-            'unidade_medida': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Unidade, Caixa, Pacote'}),
+            'preco': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.01'}),
         }
 
 
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
-        fields = ['nome', 'descricao']
+        fields = ['nome']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da categoria'}),
-            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descrição opcional'}),
         }
