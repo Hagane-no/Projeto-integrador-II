@@ -1,1 +1,2 @@
 
+# Inicializa o aplicativo estoque.
